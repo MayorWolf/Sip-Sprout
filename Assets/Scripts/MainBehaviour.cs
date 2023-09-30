@@ -21,9 +21,13 @@ public class MainBehaviour : MonoBehaviour
     [SerializeField]
     private TMP_Text _consumedString; //TextComponent that displays daily ammount of water consumption
     [SerializeField]
+    private TMP_Text _notificationToggleString;
+    [SerializeField]
     private Slider _slider; //Slider displaying percentage of daily goal
     [SerializeField]
     private TMP_InputField _customAmmountInput;
+    [SerializeField]
+    private TMP_InputField _customGoalInput;
     [SerializeField]
     Sprite[] _plantStatus;
     [SerializeField]
@@ -33,6 +37,7 @@ public class MainBehaviour : MonoBehaviour
     
     private float _consumedWater = 0f;
     private float _consumptionGoal = 2.2f;
+    private bool _notificationActive = true;
 
 
     // Start is called before the first frame update
@@ -41,13 +46,15 @@ public class MainBehaviour : MonoBehaviour
         //Load saved data
         _consumedWater = PlayerPrefs.GetFloat("ConsumedWater");
         _consumptionGoal = (PlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : PlayerPrefs.GetFloat("WaterGoal");
+        _notificationActive = (PlayerPrefs.GetInt("NotificationsActive") == 1) ? true : false;
+
+        _customGoalInput.text = _consumptionGoal.ToString();
 
         //Update UI without changeing values
         AddHydration(0);
 
         //Setup Notifications
         _NotificationSetup();
-
 
     }
 
@@ -77,6 +84,21 @@ public class MainBehaviour : MonoBehaviour
     public void AddCustomHydration()
     {
         AddHydration(float.Parse(_customAmmountInput.text));
+    }
+
+    //Set a custom daily goal
+    public void SetCustomGoal()
+    {
+        if(float.Parse(_customGoalInput.text) > 0)
+        {
+            _consumptionGoal = float.Parse(_customGoalInput.text);
+
+            //Save new data
+            PlayerPrefs.SetFloat("WaterGoal", _consumptionGoal);
+            PlayerPrefs.Save();
+
+            AddHydration(0);
+        }
     }
 
     //Reset to 0 (DEBUG ONLY)
@@ -112,6 +134,16 @@ public class MainBehaviour : MonoBehaviour
         notification.FireTime = System.DateTime.Now.AddSeconds(15);
 
         AndroidNotificationCenter.SendNotification(notification, "channel_id");
+    }
+
+    public void ToggleNotifications()
+    {
+        _notificationActive = !_notificationActive;
+
+        _notificationToggleString.text = (_notificationActive) ? "Notifications: ON" : "Notifications: OFF";
+
+        int boolToInt = (_notificationActive) ? 1 : 0;
+        PlayerPrefs.SetInt("NotificationsActive", boolToInt);
     }
 
     //Update plant image based on curren water percentage
