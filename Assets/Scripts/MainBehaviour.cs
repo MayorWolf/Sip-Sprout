@@ -22,6 +22,10 @@ public class MainBehaviour : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
+        _consumedWater = PlayerPrefs.GetFloat("ConsumedWater");
+
+        _consumptionGoal = (PlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : PlayerPrefs.GetFloat("WaterGoal");
         AddHydration(0); //Update UI without changeing values
         _NotificationSetup();
 
@@ -38,11 +42,18 @@ public class MainBehaviour : MonoBehaviour
         _consumedString.text = "Today's Goal: " + _consumedWater + "/" + _consumptionGoal + "l"; //Update string
         _slider.value = (_consumedWater == 0) ? 0 : (_consumedWater / _consumptionGoal); //update slider without dividing by 0 (because that would break the universe or something...)
         PlayerPrefs.SetFloat("ConsumedWater", _consumedWater);
+        PlayerPrefs.Save();
     }
 
     public void AddCustomHydration()
     {
         AddHydration(float.Parse(_customAmmountInput.text));
+    }
+
+    public void ResetHydration()
+    {
+        _consumedWater = 0;
+        AddHydration(0);
     }
 
     private void _NotificationSetup()
