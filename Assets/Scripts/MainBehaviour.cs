@@ -5,7 +5,6 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Android;
 using Unity.Notifications.Android;
-using System.Diagnostics;
 
 public class MainBehaviour : MonoBehaviour
 {
