@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Android;
 using Unity.Notifications.Android;
+using System.Diagnostics;
 
 public class MainBehaviour : MonoBehaviour
 {
@@ -17,39 +18,31 @@ public class MainBehaviour : MonoBehaviour
     [SerializeField]
     private TMP_Text _consumedString; //TextComponent that displays daily ammount of water consumption
     [SerializeField]
-    private TMP_Text _notificationToggleString;
+    private TMP_Text _notificationToggleString;//TextComponent displaying the current notification status
     [SerializeField]
     private Slider _slider; //Slider displaying percentage of daily goal
     [SerializeField]
-    private TMP_InputField _customAmmountInput;
+    private TMP_InputField _customAmmountInput; 
     [SerializeField]
     private TMP_InputField _customGoalInput;
     [SerializeField]
-    Sprite[] _plantStatus;
+    Sprite[] _plantStatus; //List of plant sprites to display healthieness
     [SerializeField]
-    private Image _plantDisplay;
+    private Image _plantDisplay; //Image displaying plant using diefferent plant sprites
 
     string[] _notifTitles = { "I am thirsty!", "Hydration Time!", "We've been trying to reach you about your extended car warranty." };
     
     private float _consumedWater = 0f;
     private float _consumptionGoal = 2.2f;
     private bool _notificationActive = true;
+
     private System.DateTime _lastDrinkTime, _lastUsage = System.DateTime.Now;
 
 
     // Start is called before the first frame update
     void Start()
     {
-
-        Debug.Log(PlayerPrefs.GetString("Laage"));
-        //Load saved data
-        _consumedWater = PlayerPrefs.GetFloat("ConsumedWater");
-        _consumptionGoal = (PlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : PlayerPrefs.GetFloat("WaterGoal");
-        _notificationActive = (PlayerPrefs.GetInt("NotificationsActive") == 1) ? true : false;
-        _notificationToggleString.text = (_notificationActive) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
-
-        if(PlayerPrefs.GetString("LastDrink") != ""){_lastDrinkTime = System.DateTime.Parse(PlayerPrefs.GetString("LastDrink"));}
-        Debug.Log(System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")));
+        _loadSavedData();
 
         _CheckForReset();
         _customGoalInput.text = _consumptionGoal.ToString();
@@ -57,7 +50,6 @@ public class MainBehaviour : MonoBehaviour
         //Update UI without changeing values
         AddHydration(0);
 
-        //Setup Notifications
         _NotificationSetup();
 
     }
@@ -84,8 +76,6 @@ public class MainBehaviour : MonoBehaviour
 
         if(addedWater > 0)
         {
-            _lastDrinkTime = System.DateTime.Now;
-            PlayerPrefs.SetString("LastDrink", _lastDrinkTime.ToString());
 
             _ResetHourlyNotif();
 
@@ -146,6 +136,10 @@ public class MainBehaviour : MonoBehaviour
 
     private void _ResetHourlyNotif()
     {
+        _lastDrinkTime = System.DateTime.Now;
+        PlayerPrefs.SetString("LastDrink", _lastDrinkTime.ToString());
+        PlayerPrefs.Save();
+
         //Remove scheduled notifications
         AndroidNotificationCenter.CancelAllScheduledNotifications();
 
@@ -157,7 +151,6 @@ public class MainBehaviour : MonoBehaviour
             notification.Text = "Remember to drink Water from time to time. You and your plants need it.";
             if (System.DateTime.Now.Hour + 1 >= 8 && System.DateTime.Now.Hour + 1 <= 20)
             {
-
                 notification.FireTime = System.DateTime.Now.AddHours(1);
                 Debug.Log("Timer set for " + System.DateTime.Now.AddHours(1));
             }
@@ -180,8 +173,6 @@ public class MainBehaviour : MonoBehaviour
 
         int boolToInt = (_notificationActive) ? 1 : 0;
         PlayerPrefs.SetInt("NotificationsActive", boolToInt);
-
-
     }
 
     //Update plant image based on curren water percentage
@@ -208,11 +199,8 @@ public class MainBehaviour : MonoBehaviour
         System.DateTime now = System.DateTime.Now;
         if (now.Hour >= 8)
         {
-            // If it's already past 8 AM today, add a day
             now = now.AddDays(1);
         }
-
-        // Set the time to 8 AM
         return new System.DateTime(now.Year, now.Month, now.Day, 8, 0, 0);
     }
 
@@ -226,5 +214,17 @@ public class MainBehaviour : MonoBehaviour
         }
         PlayerPrefs.SetString("LastUsage", System.DateTime.Now.ToString());
         PlayerPrefs.Save();
+    }
+
+    private void _loadSavedData()
+    {
+        //Load saved data
+        _consumedWater = PlayerPrefs.GetFloat("ConsumedWater");
+        _consumptionGoal = (PlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : PlayerPrefs.GetFloat("WaterGoal");
+        _notificationActive = (PlayerPrefs.GetInt("NotificationsActive") == 1) ? true : false;
+        _notificationToggleString.text = (_notificationActive) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
+
+        if (PlayerPrefs.GetString("LastDrink") != "") { _lastDrinkTime = System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")); }
+        Debug.Log(System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")));
     }
 }
