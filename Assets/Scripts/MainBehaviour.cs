@@ -5,6 +5,8 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Android;
 using Unity.Notifications.Android;
+using System.Diagnostics;
+using System;
 
 public class MainBehaviour : MonoBehaviour
 {
@@ -14,9 +16,6 @@ public class MainBehaviour : MonoBehaviour
      * - Better Notifications
      * 
      */
-
-
-
 
     [SerializeField]
     private TMP_Text _consumedString; //TextComponent that displays daily ammount of water consumption
@@ -38,6 +37,7 @@ public class MainBehaviour : MonoBehaviour
     private float _consumedWater = 0f;
     private float _consumptionGoal = 2.2f;
     private bool _notificationActive = true;
+    private System.DateTime _lastDrinkTime = System.DateTime.Now;
 
 
     // Start is called before the first frame update
@@ -47,6 +47,7 @@ public class MainBehaviour : MonoBehaviour
         _consumedWater = PlayerPrefs.GetFloat("ConsumedWater");
         _consumptionGoal = (PlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : PlayerPrefs.GetFloat("WaterGoal");
         _notificationActive = (PlayerPrefs.GetInt("NotificationsActive") == 1) ? true : false;
+        _notificationToggleString.text = (_notificationActive) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
 
         _customGoalInput.text = _consumptionGoal.ToString();
 
@@ -78,6 +79,13 @@ public class MainBehaviour : MonoBehaviour
         //Save new data
         PlayerPrefs.SetFloat("ConsumedWater", _consumedWater);
         PlayerPrefs.Save();
+
+        if(addedWater > 0)
+        {
+            _lastDrinkTime = System.DateTime.Now;
+            _ResetHourlyNotif();
+
+        }
     }
 
     //Parses Input string to float for custom Hydration values
@@ -127,13 +135,34 @@ public class MainBehaviour : MonoBehaviour
             Permission.RequestUserPermission("android.permission.POST_NOTIFICATIONS");
         }
 
-        //Throw notification
-        var notification = new AndroidNotification();
-        notification.Title = _notifTitles[Random.Range(0,_notifTitles.Length)];
-        notification.Text = "Remember to drink Water from time to time. You and your plants need it.";
-        notification.FireTime = System.DateTime.Now.AddSeconds(15);
+        
+    }
 
-        AndroidNotificationCenter.SendNotification(notification, "channel_id");
+    private void _ResetHourlyNotif()
+    {
+        //Remove scheduled notifications
+        AndroidNotificationCenter.CancelAllScheduledNotifications();
+
+        if (_notificationActive)
+        {
+            //Throw notification
+            var notification = new AndroidNotification();
+            notification.Title = _notifTitles[Random.Range(0, _notifTitles.Length)];
+            notification.Text = "Remember to drink Water from time to time. You and your plants need it.";
+            if (System.DateTime.Now.Hour + 1 >= 8 && System.DateTime.Now.Hour + 1 <= 20)
+            {
+
+                notification.FireTime = System.DateTime.Now.AddHours(1);
+                Debug.Log("Timer set for " + System.DateTime.Now.AddHours(1));
+            }
+            else
+            {
+                //TODO: Logic zum feuern um 8 Uhr
+            }
+
+            AndroidNotificationCenter.SendNotification(notification, "channel_id");
+
+        }
     }
 
     public void ToggleNotifications()
@@ -144,6 +173,8 @@ public class MainBehaviour : MonoBehaviour
 
         int boolToInt = (_notificationActive) ? 1 : 0;
         PlayerPrefs.SetInt("NotificationsActive", boolToInt);
+
+
     }
 
     //Update plant image based on curren water percentage
