@@ -11,7 +11,8 @@ public class MainBehaviour : MonoBehaviour
     /**
      * TODO:
      * - Test Notifications and reset
-     * 
+     * - ANdroid input comata
+     * - Water reset whith app in background running
      */
 
     [SerializeField]
@@ -73,12 +74,7 @@ public class MainBehaviour : MonoBehaviour
         //Save new data
         PlayerPrefs.SetFloat("ConsumedWater", _consumedWater);
 
-        if(addedWater > 0)
-        {
-
-            _ResetHourlyNotif();
-
-        }
+        if(addedWater > 0){_ResetHourlyNotif();}
 
         PlayerPrefs.Save();
     }
@@ -122,15 +118,14 @@ public class MainBehaviour : MonoBehaviour
             Importance = Importance.Default,
             Description = "Generic notifications",
         };
+
         AndroidNotificationCenter.RegisterNotificationChannel(channel);
 
         //Get Notification Permissions
         if (!Permission.HasUserAuthorizedPermission("android.permission.POST_NOTIFICATIONS"))
         {
             Permission.RequestUserPermission("android.permission.POST_NOTIFICATIONS");
-        }
-
-        
+        }        
     }
 
     private void _ResetHourlyNotif()
@@ -160,7 +155,6 @@ public class MainBehaviour : MonoBehaviour
             }
 
             AndroidNotificationCenter.SendNotification(notification, "channel_id");
-
         }
     }
 
@@ -172,6 +166,8 @@ public class MainBehaviour : MonoBehaviour
 
         int boolToInt = (_notificationActive) ? 1 : 0;
         PlayerPrefs.SetInt("NotificationsActive", boolToInt);
+        Debug.Log("ToggleNotifications:" + _notificationActive);
+        PlayerPrefs.Save();
     }
 
     //Update plant image based on curren water percentage
@@ -190,7 +186,6 @@ public class MainBehaviour : MonoBehaviour
         {
             temp.sprite = _plantStatus[0];
         }
-
     }
 
     private System.DateTime _GetNext8AM()
@@ -224,6 +219,5 @@ public class MainBehaviour : MonoBehaviour
         _notificationToggleString.text = (_notificationActive) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
 
         if (PlayerPrefs.GetString("LastDrink") != "") { _lastDrinkTime = System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")); }
-        Debug.Log(System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")));
     }
 }
