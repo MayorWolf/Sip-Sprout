@@ -153,7 +153,7 @@ public class MainBehaviour : MonoBehaviour
             var notification = new AndroidNotification();
             notification.Title = _notifTitles[Random.Range(0, _notifTitles.Length)];
             notification.Text = "Remember to drink Water from time to time. You and your plants need it.";
-            if (System.DateTime.Now.Hour + 1 >= 8 && System.DateTime.Now.Hour + 1 <= 20)
+            if (System.DateTime.Now.Hour + 1 >= 8 && System.DateTime.Now.Hour + 1 <= 14)
             {
 
                 notification.FireTime = System.DateTime.Now.AddHours(1);
@@ -161,7 +161,8 @@ public class MainBehaviour : MonoBehaviour
             }
             else
             {
-                //TODO: Logic zum feuern um 8 Uhr
+                notification.FireTime = _GetNext8AM();
+                Debug.Log("QUIET TIME! Timer set for " + _GetNext8AM());
             }
 
             AndroidNotificationCenter.SendNotification(notification, "channel_id");
@@ -198,5 +199,18 @@ public class MainBehaviour : MonoBehaviour
             temp.sprite = _plantStatus[0];
         }
 
+    }
+
+    private System.DateTime _GetNext8AM()
+    {
+        System.DateTime now = System.DateTime.Now;
+        if (now.Hour >= 8)
+        {
+            // If it's already past 8 AM today, add a day
+            now = now.AddDays(1);
+        }
+
+        // Set the time to 8 AM
+        return new System.DateTime(now.Year, now.Month, now.Day, 8, 0, 0);
     }
 }
