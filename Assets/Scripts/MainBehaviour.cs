@@ -10,8 +10,7 @@ public class MainBehaviour : MonoBehaviour
 {
     /**
      * TODO:
-     * - Daily Reset
-     * - Better Notifications
+     * - Test Notifications and reset
      * 
      */
 
@@ -35,21 +34,24 @@ public class MainBehaviour : MonoBehaviour
     private float _consumedWater = 0f;
     private float _consumptionGoal = 2.2f;
     private bool _notificationActive = true;
-    private System.DateTime _lastDrinkTime = System.DateTime.Now;
+    private System.DateTime _lastDrinkTime, _lastUsage = System.DateTime.Now;
 
 
     // Start is called before the first frame update
     void Start()
     {
+
+        Debug.Log(PlayerPrefs.GetString("Laage"));
         //Load saved data
         _consumedWater = PlayerPrefs.GetFloat("ConsumedWater");
         _consumptionGoal = (PlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : PlayerPrefs.GetFloat("WaterGoal");
         _notificationActive = (PlayerPrefs.GetInt("NotificationsActive") == 1) ? true : false;
         _notificationToggleString.text = (_notificationActive) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
 
-        if(PlayerPrefs.GetString("LastDrink") != null){_lastDrinkTime = System.DateTime.Parse(PlayerPrefs.GetString("LastDrink"));}
+        if(PlayerPrefs.GetString("LastDrink") != ""){_lastDrinkTime = System.DateTime.Parse(PlayerPrefs.GetString("LastDrink"));}
         Debug.Log(System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")));
 
+        _CheckForReset();
         _customGoalInput.text = _consumptionGoal.ToString();
 
         //Update UI without changeing values
@@ -113,7 +115,7 @@ public class MainBehaviour : MonoBehaviour
         }
     }
 
-    //Reset to 0 (DEBUG ONLY)
+    //Reset )
     public void ResetHydration()
     {
         _consumedWater = 0;
@@ -153,7 +155,7 @@ public class MainBehaviour : MonoBehaviour
             var notification = new AndroidNotification();
             notification.Title = _notifTitles[Random.Range(0, _notifTitles.Length)];
             notification.Text = "Remember to drink Water from time to time. You and your plants need it.";
-            if (System.DateTime.Now.Hour + 1 >= 8 && System.DateTime.Now.Hour + 1 <= 14)
+            if (System.DateTime.Now.Hour + 1 >= 8 && System.DateTime.Now.Hour + 1 <= 20)
             {
 
                 notification.FireTime = System.DateTime.Now.AddHours(1);
@@ -212,5 +214,17 @@ public class MainBehaviour : MonoBehaviour
 
         // Set the time to 8 AM
         return new System.DateTime(now.Year, now.Month, now.Day, 8, 0, 0);
+    }
+
+    private void _CheckForReset()
+    {
+        if (PlayerPrefs.GetString("LastUsage") != "") { _lastUsage = System.DateTime.Parse(PlayerPrefs.GetString("LastUsage")); }
+
+        if (_lastUsage.Day < System.DateTime.Now.Day)
+        {
+            ResetHydration();
+        }
+        PlayerPrefs.SetString("LastUsage", System.DateTime.Now.ToString());
+        PlayerPrefs.Save();
     }
 }
