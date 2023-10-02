@@ -5,8 +5,6 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.Android;
 using Unity.Notifications.Android;
-using System.Diagnostics;
-using System;
 
 public class MainBehaviour : MonoBehaviour
 {
@@ -49,6 +47,9 @@ public class MainBehaviour : MonoBehaviour
         _notificationActive = (PlayerPrefs.GetInt("NotificationsActive") == 1) ? true : false;
         _notificationToggleString.text = (_notificationActive) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
 
+        if(PlayerPrefs.GetString("LastDrink") != null){_lastDrinkTime = System.DateTime.Parse(PlayerPrefs.GetString("LastDrink"));}
+        Debug.Log(System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")));
+
         _customGoalInput.text = _consumptionGoal.ToString();
 
         //Update UI without changeing values
@@ -72,20 +73,23 @@ public class MainBehaviour : MonoBehaviour
         _consumedWater = (_consumedWater + addedWater >= 0) ? _consumedWater += addedWater : 0;
 
         //Update text, slider & image
-        _consumedString.text = "Today's Goal: " + _consumedWater + "/" + _consumptionGoal + "l";
+        _consumedString.text = "Today's Goal: " + _consumedWater.ToString("G3") + "/" + _consumptionGoal + "l";
         _slider.value = (_consumedWater == 0) ? 0 : (_consumedWater / _consumptionGoal); //without dividing by 0 (because that would break the universe or something...)
         _UpdateImage();
 
         //Save new data
         PlayerPrefs.SetFloat("ConsumedWater", _consumedWater);
-        PlayerPrefs.Save();
 
         if(addedWater > 0)
         {
             _lastDrinkTime = System.DateTime.Now;
+            PlayerPrefs.SetString("LastDrink", _lastDrinkTime.ToString());
+
             _ResetHourlyNotif();
 
         }
+
+        PlayerPrefs.Save();
     }
 
     //Parses Input string to float for custom Hydration values
