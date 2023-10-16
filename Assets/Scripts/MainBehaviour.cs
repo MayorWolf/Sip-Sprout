@@ -64,7 +64,7 @@ public class MainBehaviour : MonoBehaviour
     // Check for app inactivity
     private void OnApplicationFocus(bool pauseStatus) {
         if(pauseStatus){
-            Debug.Log("We back, we ballin");
+            Debug.Log("App returned activity");
             _CheckForReset();
         }
     }
@@ -230,8 +230,8 @@ public class MainBehaviour : MonoBehaviour
         {
             _sleepStart = int.Parse(customSleepStart.text);
             _sleepEnd = int.Parse(customSleepEnd.text);
-            PlayerPrefs.SetString("SleepStart", _sleepStart.ToString(_culture));
-            PlayerPrefs.SetString("SleepEnd", _sleepEnd.ToString(_culture));
+            PlayerPrefs.SetInt("SleepStart", _sleepStart);
+            PlayerPrefs.SetInt("SleepEnd", _sleepEnd);
             PlayerPrefs.Save();
             _ResetHourlyNotification();
         }
