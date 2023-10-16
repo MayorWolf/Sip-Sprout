@@ -9,8 +9,6 @@ public class MainBehaviour : MonoBehaviour
 {
     /**
      * TODO:
-     * - Test Notifications and reset
-     * - Custom notification start and end time
      * - Android input comma (in better)
      */
 
@@ -39,7 +37,7 @@ public class MainBehaviour : MonoBehaviour
     private float _consumptionGoal = 2.2f;
     private int _sleepStart = 21;
     private int _sleepEnd = 8;
-    private bool _notificationActive = true;
+    private bool _noNotifications = true;
 
     private System.DateTime _lastDrinkTime, _lastUsage = System.DateTime.Now;
     
@@ -160,7 +158,7 @@ public class MainBehaviour : MonoBehaviour
         //Remove scheduled notifications
         AndroidNotificationCenter.CancelAllScheduledNotifications();
 
-        if (_notificationActive)
+        if (_noNotifications)
         {
             //Throw notification
             var notification = new AndroidNotification
@@ -185,13 +183,13 @@ public class MainBehaviour : MonoBehaviour
 
     public void ToggleNotifications()
     {
-        _notificationActive = !_notificationActive;
+        _noNotifications = !_noNotifications;
 
-        notificationToggleString.text = (_notificationActive) ? "Notifications: ON" : "Notifications: OFF";
+        notificationToggleString.text = (!_noNotifications) ? "Notifications: ON" : "Notifications: OFF";
 
-        int boolToInt = (_notificationActive) ? 1 : 0;
-        PlayerPrefs.SetInt("NotificationsActive", boolToInt);
-        Debug.Log("ToggleNotifications:" + _notificationActive);
+        int boolToInt = (_noNotifications) ? 1 : 0;
+        PlayerPrefs.SetInt("NoNotifications", boolToInt);
+        Debug.Log("ToggleNotifications:" + _noNotifications);
         PlayerPrefs.Save();
     }
 
@@ -250,14 +248,13 @@ public class MainBehaviour : MonoBehaviour
             {
                 _lastUsage = System.DateTime.Parse(PlayerPrefs.GetString("LastUsage"));
             }
-        
 
-        if (_lastUsage.Day < System.DateTime.Now.Day)
-        {
-            _ResetHydration();
-        }
-        PlayerPrefs.SetString("LastUsage", System.DateTime.Now.ToString(_culture));
-        PlayerPrefs.Save();
+            if (_lastUsage.Day < System.DateTime.Now.Day)
+            {
+                _ResetHydration();
+            }
+            PlayerPrefs.SetString("LastUsage", System.DateTime.Now.ToString(_culture));
+            PlayerPrefs.Save();
     }
 
     private void _LoadSavedData()
@@ -265,14 +262,14 @@ public class MainBehaviour : MonoBehaviour
         //Load saved data
         _consumedWater = PlayerPrefs.GetFloat("ConsumedWater");
         _consumptionGoal = (PlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : PlayerPrefs.GetFloat("WaterGoal");
-        _notificationActive = (PlayerPrefs.GetInt("NotificationsActive") == 1);
+        _noNotifications = (PlayerPrefs.GetInt("NoNotifications") == 1);
         if (PlayerPrefs.GetInt("SleepStart") != 0 || PlayerPrefs.GetInt("SleepEnd") != 0)
         {
             _sleepStart = PlayerPrefs.GetInt("SleepStart");
             _sleepEnd = PlayerPrefs.GetInt("SleepEnd");
         }
 
-        notificationToggleString.text = (_notificationActive) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
+        notificationToggleString.text = (!_noNotifications) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
 
        if (PlayerPrefs.GetString("LastDrink") != "") { _lastDrinkTime = System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")); }
     }
