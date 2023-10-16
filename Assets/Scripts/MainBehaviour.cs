@@ -45,6 +45,8 @@ public class MainBehaviour : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        ZPlayerPrefs.Initialize("nuq99qj3ng9qp+ifemr", "834h3gnpmh-4");
+
         _LoadSavedData();
 
         _CheckForReset();
@@ -79,11 +81,11 @@ public class MainBehaviour : MonoBehaviour
         _UpdateImage();
 
         //Save new data
-        PlayerPrefs.SetFloat("ConsumedWater", _consumedWater);
+        ZPlayerPrefs.SetFloat("ConsumedWater", _consumedWater);
 
         if(addedWater > 0){_ResetHourlyNotification();}
 
-        PlayerPrefs.Save();
+        //PlayerPrefs.Save();
     }
 
     //Parses Input string to float for custom Hydration values
@@ -108,8 +110,8 @@ public class MainBehaviour : MonoBehaviour
                 _consumptionGoal = float.Parse(customGoalInput.text);
 
                 //Save new data
-                PlayerPrefs.SetFloat("WaterGoal", _consumptionGoal);
-                PlayerPrefs.Save();
+                ZPlayerPrefs.SetFloat("WaterGoal", _consumptionGoal);
+                //PlayerPrefs.Save();
 
                 AddHydration(0);
             }
@@ -152,8 +154,8 @@ public class MainBehaviour : MonoBehaviour
     private void _ResetHourlyNotification()
     {
         _lastDrinkTime = System.DateTime.Now;
-        PlayerPrefs.SetString("LastDrink", _lastDrinkTime.ToString(_culture));
-        PlayerPrefs.Save();
+        ZPlayerPrefs.SetString("LastDrink", _lastDrinkTime.ToString(_culture));
+        //PlayerPrefs.Save();
 
         //Remove scheduled notifications
         AndroidNotificationCenter.CancelAllScheduledNotifications();
@@ -188,9 +190,9 @@ public class MainBehaviour : MonoBehaviour
         notificationToggleString.text = (!_noNotifications) ? "Notifications: ON" : "Notifications: OFF";
 
         int boolToInt = (_noNotifications) ? 1 : 0;
-        PlayerPrefs.SetInt("NoNotifications", boolToInt);
+        ZPlayerPrefs.SetInt("NoNotifications", boolToInt);
         Debug.Log("ToggleNotifications:" + _noNotifications);
-        PlayerPrefs.Save();
+        //PlayerPrefs.Save();
     }
 
     //Update plant image based on curren water percentage
@@ -228,9 +230,9 @@ public class MainBehaviour : MonoBehaviour
         {
             _sleepStart = int.Parse(customSleepStart.text);
             _sleepEnd = int.Parse(customSleepEnd.text);
-            PlayerPrefs.SetInt("SleepStart", _sleepStart);
-            PlayerPrefs.SetInt("SleepEnd", _sleepEnd);
-            PlayerPrefs.Save();
+            ZPlayerPrefs.SetInt("SleepStart", _sleepStart);
+            ZPlayerPrefs.SetInt("SleepEnd", _sleepEnd);
+            //PlayerPrefs.Save();
             _ResetHourlyNotification();
         }
         catch
@@ -244,33 +246,33 @@ public class MainBehaviour : MonoBehaviour
 
     private void _CheckForReset()
     {
-            if (PlayerPrefs.GetString("LastUsage") != "")
+            if (ZPlayerPrefs.GetString("LastUsage") != "")
             {
-                _lastUsage = System.DateTime.Parse(PlayerPrefs.GetString("LastUsage"));
+                _lastUsage = System.DateTime.Parse(ZPlayerPrefs.GetString("LastUsage"));
             }
 
             if (_lastUsage.Day < System.DateTime.Now.Day)
             {
                 _ResetHydration();
             }
-            PlayerPrefs.SetString("LastUsage", System.DateTime.Now.ToString(_culture));
-            PlayerPrefs.Save();
+            ZPlayerPrefs.SetString("LastUsage", System.DateTime.Now.ToString(_culture));
+            //PlayerPrefs.Save();
     }
 
     private void _LoadSavedData()
     {
         //Load saved data
-        _consumedWater = PlayerPrefs.GetFloat("ConsumedWater");
-        _consumptionGoal = (PlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : PlayerPrefs.GetFloat("WaterGoal");
-        _noNotifications = (PlayerPrefs.GetInt("NoNotifications") == 1);
-        if (PlayerPrefs.GetInt("SleepStart") != 0 || PlayerPrefs.GetInt("SleepEnd") != 0)
+        _consumedWater = ZPlayerPrefs.GetFloat("ConsumedWater");
+        _consumptionGoal = (ZPlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : ZPlayerPrefs.GetFloat("WaterGoal");
+        _noNotifications = (ZPlayerPrefs.GetInt("NoNotifications") == 1);
+        if (ZPlayerPrefs.GetInt("SleepStart") != 0 || ZPlayerPrefs.GetInt("SleepEnd") != 0)
         {
-            _sleepStart = PlayerPrefs.GetInt("SleepStart");
-            _sleepEnd = PlayerPrefs.GetInt("SleepEnd");
+            _sleepStart = ZPlayerPrefs.GetInt("SleepStart");
+            _sleepEnd = ZPlayerPrefs.GetInt("SleepEnd");
         }
 
         notificationToggleString.text = (!_noNotifications) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
 
-       if (PlayerPrefs.GetString("LastDrink") != "") { _lastDrinkTime = System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")); }
+       if (ZPlayerPrefs.GetString("LastDrink") != "") { _lastDrinkTime = System.DateTime.Parse(ZPlayerPrefs.GetString("LastDrink")); }
     }
 }
