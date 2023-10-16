@@ -10,7 +10,8 @@ public class MainBehaviour : MonoBehaviour
     /**
      * TODO:
      * - Test Notifications and reset
-     * - Android input comma
+     * - Custom notification start and end time
+     * - Android input comma (in better)
      */
 
     [SerializeField]
@@ -53,7 +54,7 @@ public class MainBehaviour : MonoBehaviour
     }
     
     // Check for app inactivity
-    void OnApplicationFocus(bool pauseStatus) {
+    private void OnApplicationFocus(bool pauseStatus) {
         if(pauseStatus){
             Debug.Log("We back, we ballin");
             _CheckForReset();
@@ -82,7 +83,14 @@ public class MainBehaviour : MonoBehaviour
     //Parses Input string to float for custom Hydration values
     public void AddCustomHydration()
     {
-        AddHydration(float.Parse(customAmountInput.text));
+        try
+        {
+            AddHydration(float.Parse(customAmountInput.text));
+        }
+        catch
+        {
+            Debug.Log(customAmountInput.text + " is no valid input!");
+        }
     }
 
     //Set a custom daily goal
@@ -90,13 +98,20 @@ public class MainBehaviour : MonoBehaviour
     {
         if(float.Parse(customGoalInput.text) > 0)
         {
-            _consumptionGoal = float.Parse(customGoalInput.text);
+            try{
+                _consumptionGoal = float.Parse(customGoalInput.text);
 
-            //Save new data
-            PlayerPrefs.SetFloat("WaterGoal", _consumptionGoal);
-            PlayerPrefs.Save();
+                //Save new data
+                PlayerPrefs.SetFloat("WaterGoal", _consumptionGoal);
+                PlayerPrefs.Save();
 
-            AddHydration(0);
+                AddHydration(0);
+            }
+            catch
+            {
+                Debug.Log(customAmountInput.text + " is no valid input!");
+            }
+           
         }
     }
 
