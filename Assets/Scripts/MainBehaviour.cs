@@ -11,7 +11,6 @@ public class MainBehaviour : MonoBehaviour
      * TODO:
      * - Test Notifications and reset
      * - Android input comma
-     * - Water reset with app running in background 
      */
 
     [SerializeField]
@@ -37,7 +36,7 @@ public class MainBehaviour : MonoBehaviour
 
     private System.DateTime _lastDrinkTime, _lastUsage = System.DateTime.Now;
     
-    private readonly CultureInfo _culture = CultureInfo.InvariantCulture;
+    private readonly CultureInfo _culture = new CultureInfo("de-DE");
     // Start is called before the first frame update
     void Start()
     {
@@ -52,8 +51,15 @@ public class MainBehaviour : MonoBehaviour
         _NotificationSetup();
 
     }
-
-
+    
+    // Check for app inactivity
+    void OnApplicationFocus(bool pauseStatus) {
+        if(pauseStatus){
+            Debug.Log("We back, we ballin");
+            _CheckForReset();
+        }
+    }
+    
     //Increase amount of water the user drank today
     public void AddHydration(float addedWater)
     {
@@ -142,12 +148,12 @@ public class MainBehaviour : MonoBehaviour
             if (System.DateTime.Now.Hour + 1 >= 8 && System.DateTime.Now.Hour + 1 <= 20)
             {
                 notification.FireTime = System.DateTime.Now.AddHours(1);
-                Debug.Log("Timer set for " + System.DateTime.Now.AddHours(1));
+                Debug.Log("Timer set for " + notification.FireTime);
             }
             else
             {
                 notification.FireTime = _GetNext8AM();
-                Debug.Log("QUIET TIME! Timer set for " + _GetNext8AM());
+                Debug.Log("QUIET TIME! Timer set for " + notification.FireTime);
             }
 
             AndroidNotificationCenter.SendNotification(notification, "channel_id");
@@ -197,7 +203,11 @@ public class MainBehaviour : MonoBehaviour
 
     private void _CheckForReset()
     {
-        if (PlayerPrefs.GetString("LastUsage") != "") { _lastUsage = System.DateTime.Parse(PlayerPrefs.GetString("LastUsage")); }
+            if (PlayerPrefs.GetString("LastUsage") != "")
+            {
+                _lastUsage = System.DateTime.Parse(PlayerPrefs.GetString("LastUsage"));
+            }
+        
 
         if (_lastUsage.Day < System.DateTime.Now.Day)
         {
@@ -215,6 +225,6 @@ public class MainBehaviour : MonoBehaviour
         _notificationActive = (PlayerPrefs.GetInt("NotificationsActive") == 1);
         notificationToggleString.text = (_notificationActive) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
 
-        if (PlayerPrefs.GetString("LastDrink") != "") { _lastDrinkTime = System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")); }
+       if (PlayerPrefs.GetString("LastDrink") != "") { _lastDrinkTime = System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")); }
     }
 }
