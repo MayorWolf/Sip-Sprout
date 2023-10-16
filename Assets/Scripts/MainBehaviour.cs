@@ -25,6 +25,10 @@ public class MainBehaviour : MonoBehaviour
     [SerializeField]
     private TMP_InputField customGoalInput;
     [SerializeField]
+    private TMP_InputField customSleepStart;
+    [SerializeField]
+    private TMP_InputField customSleepEnd;
+    [SerializeField]
     Sprite[] plantStatus; //List of plant sprites to display healthiness
     [SerializeField]
     private Image plantDisplay; //Image displaying plant using different plant sprites
@@ -33,6 +37,8 @@ public class MainBehaviour : MonoBehaviour
     
     private float _consumedWater;
     private float _consumptionGoal = 2.2f;
+    private int _sleepStart = 21;
+    private int _sleepEnd = 8;
     private bool _notificationActive = true;
 
     private System.DateTime _lastDrinkTime, _lastUsage = System.DateTime.Now;
@@ -45,6 +51,8 @@ public class MainBehaviour : MonoBehaviour
 
         _CheckForReset();
         customGoalInput.text = _consumptionGoal.ToString(_culture);
+        customSleepStart.text = _sleepStart.ToString(_culture);
+        customSleepEnd.text = _sleepEnd.ToString(_culture);
 
         //Update UI without changing values
         AddHydration(0);
@@ -160,14 +168,14 @@ public class MainBehaviour : MonoBehaviour
                 Title = _notificationTitles[Random.Range(0, _notificationTitles.Length)],
                 Text = "Remember to drink Water from time to time. You and your plants need it."
             };
-            if (System.DateTime.Now.Hour + 1 >= 8 && System.DateTime.Now.Hour + 1 <= 20)
+            if (System.DateTime.Now.Hour + 1 >= _sleepEnd && System.DateTime.Now.Hour + 1 <= _sleepStart)
             {
                 notification.FireTime = System.DateTime.Now.AddHours(1);
                 Debug.Log("Timer set for " + notification.FireTime);
             }
             else
             {
-                notification.FireTime = _GetNext8AM();
+                notification.FireTime = _GetNextDay(_sleepEnd);
                 Debug.Log("QUIET TIME! Timer set for " + notification.FireTime);
             }
 
@@ -205,16 +213,36 @@ public class MainBehaviour : MonoBehaviour
         }
     }
 
-    // TODO: Make flexible, not just 8 am
-    private static System.DateTime _GetNext8AM()
+    private static System.DateTime _GetNextDay(int hour)
     {
         System.DateTime now = System.DateTime.Now;
-        if (now.Hour >= 8)
+        if (now.Hour >= hour)
         {
             now = now.AddDays(1);
         }
-        return new System.DateTime(now.Year, now.Month, now.Day, 8, 0, 0);
+        return new System.DateTime(now.Year, now.Month, now.Day, hour, 0, 0);
     }
+
+    //Set the Start of the quiet hours
+    public void SetCustomSleep()
+    {
+        try
+        {
+            _sleepStart = int.Parse(customSleepStart.text);
+            _sleepEnd = int.Parse(customSleepEnd.text);
+            PlayerPrefs.SetString("SleepStart", _sleepStart.ToString(_culture));
+            PlayerPrefs.SetString("SleepEnd", _sleepEnd.ToString(_culture));
+            PlayerPrefs.Save();
+            _ResetHourlyNotification();
+        }
+        catch
+        {
+            Debug.Log(customSleepStart.text + " is not a valid input.");
+        }
+    }
+    
+    //Set the End of the quiet hours
+   
 
     private void _CheckForReset()
     {
@@ -238,6 +266,12 @@ public class MainBehaviour : MonoBehaviour
         _consumedWater = PlayerPrefs.GetFloat("ConsumedWater");
         _consumptionGoal = (PlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : PlayerPrefs.GetFloat("WaterGoal");
         _notificationActive = (PlayerPrefs.GetInt("NotificationsActive") == 1);
+        if (PlayerPrefs.GetInt("SleepStart") != 0 || PlayerPrefs.GetInt("SleepEnd") != 0)
+        {
+            _sleepStart = PlayerPrefs.GetInt("SleepStart");
+            _sleepEnd = PlayerPrefs.GetInt("SleepEnd");
+        }
+
         notificationToggleString.text = (_notificationActive) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
 
        if (PlayerPrefs.GetString("LastDrink") != "") { _lastDrinkTime = System.DateTime.Parse(PlayerPrefs.GetString("LastDrink")); }
