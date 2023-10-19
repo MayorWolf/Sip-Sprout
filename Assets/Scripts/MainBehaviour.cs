@@ -37,7 +37,7 @@ public class MainBehaviour : MonoBehaviour
     private float _consumptionGoal = 2.2f;
     private int _sleepStart = 21;
     private int _sleepEnd = 8;
-    private bool _noNotifications = true;
+    private bool _noNotifications = false;
 
     private System.DateTime _lastDrinkTime, _lastUsage = System.DateTime.Now;
     
@@ -136,14 +136,25 @@ public class MainBehaviour : MonoBehaviour
         //Setup Notification channel
         var channel = new AndroidNotificationChannel()
         {
-            Id = "channel_id",
-            Name = "Default Channel",
+            Id = "SaS_regularReminders",
+            Name = "Hourly Reminder",
             Importance = Importance.Default,
             Description = "Generic notifications",
         };
 
         AndroidNotificationCenter.RegisterNotificationChannel(channel);
+        
+        //Setup Notification channel
+        var wakechannel = new AndroidNotificationChannel()
+        {
+            Id = "SaS_WakeReminders",
+            Name = "Daily Reminder",
+            Importance = Importance.Default,
+            Description = "Generic notifications",
+        };
 
+        AndroidNotificationCenter.RegisterNotificationChannel(wakechannel);
+        
         //Get Notification Permissions
         if (!Permission.HasUserAuthorizedPermission("android.permission.POST_NOTIFICATIONS"))
         {
@@ -160,34 +171,61 @@ public class MainBehaviour : MonoBehaviour
         //Remove scheduled notifications
         AndroidNotificationCenter.CancelAllScheduledNotifications();
 
-        if (_noNotifications)
+        if (!_noNotifications) return;
+
+        for (int i = 1; i <= 3; i++)
         {
+            
             //Throw notification
             var notification = new AndroidNotification
             {
                 Title = _notificationTitles[Random.Range(0, _notificationTitles.Length)],
                 Text = "Remember to drink Water from time to time. You and your plants need it."
             };
-            if (System.DateTime.Now.Hour + 1 >= _sleepEnd && System.DateTime.Now.Hour + 1 <= _sleepStart)
+            if (System.DateTime.Now.Hour + i >= _sleepEnd && System.DateTime.Now.Hour + i <= _sleepStart)
             {
-                notification.FireTime = System.DateTime.Now.AddHours(1);
+                notification.FireTime = System.DateTime.Now.AddHours(i);
                 Debug.Log("Timer set for " + notification.FireTime);
             }
             else
             {
                 notification.FireTime = _GetNextDay(_sleepEnd);
                 Debug.Log("QUIET TIME! Timer set for " + notification.FireTime);
+                i = 4;
             }
 
-            AndroidNotificationCenter.SendNotification(notification, "channel_id");
+            AndroidNotificationCenter.SendNotification(notification, "SaS_regularReminders");
         }
+
+        for (int i = 1; i <= 7; i++)
+        {
+            //Throw wakeup notification
+            var wakeupNotif = new AndroidNotification
+            {
+                Title = "Did you forget something?",
+                Text = "Haven't seen you in a while, might want to drink something?"
+            };
+            if (System.DateTime.Now.Hour + i >= _sleepEnd && System.DateTime.Now.Hour + i <= _sleepStart)
+            {
+                wakeupNotif.FireTime = System.DateTime.Now.AddDays(i);
+                Debug.Log("Wakeup Timer set for " + wakeupNotif.FireTime);
+            }
+            else
+            {
+                wakeupNotif.FireTime = _GetNextDay(_sleepEnd).AddDays(i);
+                Debug.Log("QUIET TIME! Wakeup timer set for " + wakeupNotif.FireTime);
+            }
+
+            AndroidNotificationCenter.SendNotification(wakeupNotif, "SaS_WakeReminders");
+        }
+       
     }
 
     public void ToggleNotifications()
     {
         _noNotifications = !_noNotifications;
 
-        notificationToggleString.text = (!_noNotifications) ? "Notifications: ON" : "Notifications: OFF";
+        notificationToggleString.text = (_noNotifications) ? "Notifications: ON" : "Notifications: OFF";
 
         int boolToInt = (_noNotifications) ? 1 : 0;
         ZPlayerPrefs.SetInt("NoNotifications", boolToInt);
@@ -271,7 +309,7 @@ public class MainBehaviour : MonoBehaviour
             _sleepEnd = ZPlayerPrefs.GetInt("SleepEnd");
         }
 
-        notificationToggleString.text = (!_noNotifications) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
+        notificationToggleString.text = (_noNotifications) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
 
        if (ZPlayerPrefs.GetString("LastDrink") != "") { _lastDrinkTime = System.DateTime.Parse(ZPlayerPrefs.GetString("LastDrink")); }
     }
