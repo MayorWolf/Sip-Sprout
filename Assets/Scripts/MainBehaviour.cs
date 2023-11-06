@@ -16,6 +16,8 @@ public class MainBehaviour : MonoBehaviour
     private TMP_Text consumedString; //TextComponent that displays daily amount of water consumption
     [SerializeField]
     private TMP_Text notificationToggleString;//TextComponent displaying the current notification status
+    [SerializeField] 
+    private TMP_Text streakString; //TextComponent displaying the current streak (whuhu!)
     [SerializeField]
     private Slider slider; //Slider displaying percentage of daily goal
     [SerializeField]
@@ -31,6 +33,8 @@ public class MainBehaviour : MonoBehaviour
     [SerializeField]
     private Image plantDisplay; //Image displaying plant using different plant sprites
 
+ 
+
     private readonly string[] _notificationTitles = { "I am thirsty!", "Hydration Time!", "We've been trying to reach you about your extended car warranty." };
     
     private float _consumedWater;
@@ -38,6 +42,7 @@ public class MainBehaviour : MonoBehaviour
     private int _sleepStart = 21;
     private int _sleepEnd = 8;
     private bool _noNotifications = false;
+    private int _streak = 0;
 
     private System.DateTime _lastDrinkTime, _lastUsage = System.DateTime.Now;
     
@@ -53,10 +58,11 @@ public class MainBehaviour : MonoBehaviour
         customGoalInput.text = _consumptionGoal.ToString(_culture);
         customSleepStart.text = _sleepStart.ToString(_culture);
         customSleepEnd.text = _sleepEnd.ToString(_culture);
-
+        
         //Update UI without changing values
         AddHydration(0);
-
+        _UpdateStreaks();
+        
         _NotificationSetup();
 
     }
@@ -66,6 +72,7 @@ public class MainBehaviour : MonoBehaviour
         if(pauseStatus){
             Debug.Log("App returned activity");
             _CheckForReset();
+            _UpdateStreaks();
         }
     }
     
@@ -164,6 +171,7 @@ public class MainBehaviour : MonoBehaviour
 
     private void _ResetHourlyNotification()
     {
+        _UpdateStreaks();
         _lastDrinkTime = System.DateTime.Now;
         ZPlayerPrefs.SetString("LastDrink", _lastDrinkTime.ToString(_culture));
         //PlayerPrefs.Save();
@@ -219,6 +227,27 @@ public class MainBehaviour : MonoBehaviour
             AndroidNotificationCenter.SendNotification(wakeupNotif, "SaS_WakeReminders");
         }
        
+    }
+
+    private void _UpdateStreaks()
+    {
+        if (_lastDrinkTime.Day == System.DateTime.Now.Day)
+        {
+            Debug.Log("No new Streak");
+        }
+        else if (_lastDrinkTime.Day == System.DateTime.Now.Day-1 || 
+                 (System.DateTime.Now.Day == 1 && _lastDrinkTime.Month == System.DateTime.Now.Month-1))
+        {
+            Debug.Log("Streak Continued!");
+            _streak++;
+        }
+        else
+        {
+            Debug.Log("Streak Lost :(");
+            _streak = 0;
+        }
+        ZPlayerPrefs.SetInt("Streak", _streak);
+        streakString.text = _streak.ToString();
     }
 
     public void ToggleNotifications()
@@ -303,6 +332,7 @@ public class MainBehaviour : MonoBehaviour
         _consumedWater = ZPlayerPrefs.GetFloat("ConsumedWater");
         _consumptionGoal = (ZPlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : ZPlayerPrefs.GetFloat("WaterGoal");
         _noNotifications = (ZPlayerPrefs.GetInt("NoNotifications") == 1);
+        _streak = ZPlayerPrefs.GetInt("Streak");
         if (ZPlayerPrefs.GetInt("SleepStart") != 0 || ZPlayerPrefs.GetInt("SleepEnd") != 0)
         {
             _sleepStart = ZPlayerPrefs.GetInt("SleepStart");
