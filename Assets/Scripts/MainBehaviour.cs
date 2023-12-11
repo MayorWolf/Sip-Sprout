@@ -44,7 +44,7 @@ public class MainBehaviour : MonoBehaviour
     private bool _noNotifications = false;
     private int _streak = 0;
 
-    private System.DateTime _lastDrinkTime, _lastUsage = System.DateTime.Now;
+    private System.DateTime _lastDrinkTime, _lastStreakTime, _lastUsage = System.DateTime.Now;
     
     private readonly CultureInfo _culture = new CultureInfo("de-DE");
     // Start is called before the first frame update
@@ -71,6 +71,7 @@ public class MainBehaviour : MonoBehaviour
     private void OnApplicationFocus(bool pauseStatus) {
         if(pauseStatus){
             Debug.Log("App returned activity");
+            _LoadSavedData();
             _CheckForReset();
             _UpdateStreaks();
         }
@@ -231,19 +232,30 @@ public class MainBehaviour : MonoBehaviour
 
     private void _UpdateStreaks()
     {
-        if (_lastDrinkTime.Day == System.DateTime.Now.Day)
-        {
-            Debug.Log("No new Streak");
-        }
-        else if (_lastDrinkTime.Day == System.DateTime.Now.Day-1 || 
-                 (System.DateTime.Now.Day == 1 && _lastDrinkTime.Month == System.DateTime.Now.Month-1))
+        
+        if (
+            (_lastStreakTime.Day == System.DateTime.Now.Day-1 || 
+            (System.DateTime.Now.Day == 1 && _lastStreakTime.Month == System.DateTime.Now.Month-1) || 
+            _lastStreakTime.Year == 1
+            || _streak == 0) 
+            && _consumedWater >= _consumptionGoal)
         {
             Debug.Log("Streak Continued!");
             _streak++;
+            _lastStreakTime = System.DateTime.Now;
+            ZPlayerPrefs.SetString("LastStreak", System.DateTime.Now.ToString(_culture));
+        }
+        else if (_lastDrinkTime.Day == System.DateTime.Now.Day ||
+                 _lastStreakTime.Day == System.DateTime.Now.Day-1 ||
+                 (System.DateTime.Now.Day == 1 && _lastStreakTime.Month == System.DateTime.Now.Month-1) || 
+                 _lastStreakTime.Year == 1)
+        {
+            Debug.Log("No new Streak");
         }
         else
         {
             Debug.Log("Streak Lost :(");
+            Debug.Log(_lastStreakTime.Year);
             _streak = 0;
         }
         ZPlayerPrefs.SetInt("Streak", _streak);
@@ -290,7 +302,7 @@ public class MainBehaviour : MonoBehaviour
         return new System.DateTime(now.Year, now.Month, now.Day, hour, 0, 0);
     }
 
-    //Set the Start of the quiet hours
+    //Allows custom sleep time
     public void SetCustomSleep()
     {
         try
@@ -307,9 +319,6 @@ public class MainBehaviour : MonoBehaviour
             Debug.Log(customSleepStart.text + " is not a valid input.");
         }
     }
-    
-    //Set the End of the quiet hours
-   
 
     private void _CheckForReset()
     {
@@ -318,7 +327,7 @@ public class MainBehaviour : MonoBehaviour
                 _lastUsage = System.DateTime.Parse(ZPlayerPrefs.GetString("LastUsage"));
             }
 
-            if (_lastUsage.Day < System.DateTime.Now.Day)
+            if (_lastUsage.Day < System.DateTime.Now.Day || _lastUsage.Month < System.DateTime.Now.Month || _lastUsage.Year < System.DateTime.Now.Year)
             {
                 _ResetHydration();
             }
@@ -333,6 +342,7 @@ public class MainBehaviour : MonoBehaviour
         _consumptionGoal = (ZPlayerPrefs.GetFloat("WaterGoal") == 0) ? 2.2f : ZPlayerPrefs.GetFloat("WaterGoal");
         _noNotifications = (ZPlayerPrefs.GetInt("NoNotifications") == 1);
         _streak = ZPlayerPrefs.GetInt("Streak");
+        
         if (ZPlayerPrefs.GetInt("SleepStart") != 0 || ZPlayerPrefs.GetInt("SleepEnd") != 0)
         {
             _sleepStart = ZPlayerPrefs.GetInt("SleepStart");
@@ -342,5 +352,6 @@ public class MainBehaviour : MonoBehaviour
         notificationToggleString.text = (_noNotifications) ? "Notifications: ON" : "Notifications: OFF"; //update Text accordingly
 
        if (ZPlayerPrefs.GetString("LastDrink") != "") { _lastDrinkTime = System.DateTime.Parse(ZPlayerPrefs.GetString("LastDrink")); }
+       if (ZPlayerPrefs.GetString("LastStreak") != "") { _lastStreakTime = System.DateTime.Parse(ZPlayerPrefs.GetString("LastStreak")); }
     }
 }
